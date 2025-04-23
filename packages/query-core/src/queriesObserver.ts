@@ -92,10 +92,28 @@ export class QueriesObserver<
     this.#options = options
 
     if (process.env.NODE_ENV !== 'production') {
-      const queryHashes = queries.map((query) => query.queryHash)
+      const queryHasProblematicPlaceholderData = (
+        query: (typeof queries)[number],
+      ) =>
+        query.placeholderData === null ||
+        ['string', 'number', 'boolean', 'bigint'].includes(
+          typeof query.placeholderData,
+        )
+      const problematicQueriesIfDuplicated = options?.combine
+        ? queries
+        : queries.filter(
+            (query) =>
+              queryHasProblematicPlaceholderData(query) && query.select,
+          )
+
+      const queryHashes = problematicQueriesIfDuplicated.map(
+        (query) => query.queryHash,
+      )
+
       if (new Set(queryHashes).size !== queryHashes.length) {
         console.warn(
           '[QueriesObserver]: Duplicate Queries found. This might result in unexpected behavior.',
+          queries,
         )
       }
     }

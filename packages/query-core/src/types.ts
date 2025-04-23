@@ -174,6 +174,8 @@ export type NotifyOnChangeProps =
   | undefined
   | (() => Array<keyof InfiniteQueryObserverResult> | 'all' | undefined)
 
+type NonUndefined<T> = T extends undefined ? never : T
+
 export interface QueryOptions<
   TQueryFnData = unknown,
   TError = DefaultError,
@@ -197,7 +199,9 @@ export interface QueryOptions<
    * Setting it to `Infinity` will disable garbage collection.
    */
   gcTime?: number
-  queryFn?: QueryFunction<TQueryFnData, TQueryKey, TPageParam> | SkipToken
+  queryFn?:
+    | QueryFunction<NonUndefined<TQueryFnData>, TQueryKey, TPageParam>
+    | SkipToken
   persister?: QueryPersister<
     NoInfer<TQueryFnData>,
     NoInfer<TQueryKey>,
@@ -375,11 +379,11 @@ export interface QueryObserverOptions<
    * If set, this value will be used as the placeholder data for this particular query observer while the query is still in the `loading` data and no initialData has been provided.
    */
   placeholderData?:
-    | NonFunctionGuard<TQueryData>
+    | NonFunctionGuard<NonUndefined<NoInfer<TQueryData>>>
     | PlaceholderDataFunction<
-        NonFunctionGuard<TQueryData>,
+        NonFunctionGuard<NonUndefined<NoInfer<TQueryData>>>,
         TError,
-        NonFunctionGuard<TQueryData>,
+        NonFunctionGuard<NonUndefined<NoInfer<TQueryData>>>,
         TQueryKey
       >
 

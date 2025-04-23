@@ -1771,7 +1771,7 @@ const QueryDetails = () => {
 
   const triggerError = (errorType?: DevtoolsErrorType) => {
     const error =
-      errorType?.initializer(activeQuery()!) ??
+      errorType?.initializer(activeQuery()) ??
       new Error('Unknown error from devtools')
 
     const __previousQueryOptions = activeQuery()!.options
@@ -1782,7 +1782,7 @@ const QueryDetails = () => {
       fetchMeta: {
         ...activeQuery()!.state.fetchMeta,
         __previousQueryOptions,
-      } as any,
+      },
     } as QueryState<unknown, Error>)
   }
 
@@ -1978,7 +1978,7 @@ const QueryDetails = () => {
                   fetchMeta: {
                     ...activeQueryVal.state.fetchMeta,
                     __previousQueryOptions,
-                  } as any,
+                  },
                 } as QueryState<unknown, Error>)
               }
             }}
@@ -2500,7 +2500,7 @@ const stylesFactory = (
     `,
     panel: css`
       position: fixed;
-      z-index: 9999;
+      z-index: 9999999;
       display: flex;
       gap: ${tokens.size[0.5]};
       & * {
@@ -2525,7 +2525,7 @@ const stylesFactory = (
       }
     `,
     parentPanel: css`
-      z-index: 9999;
+      z-index: 9999999;
       display: flex;
       height: 100%;
       gap: ${tokens.size[0.5]};

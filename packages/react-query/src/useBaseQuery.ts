@@ -110,7 +110,10 @@ export function useBaseQuery<
   }, [defaultedOptions, observer])
 
   // Handle suspense
-  if (shouldSuspend(defaultedOptions, result)) {
+  if (
+    defaultedOptions.enabled !== false &&
+    shouldSuspend(defaultedOptions, result)
+  ) {
     throw fetchOptimistic(defaultedOptions, observer, errorResetBoundary)
   }
 
