@@ -45,14 +45,17 @@ jobs:
           QUERY_CORE_VERSION=$(jq -r .version packages/query-core/package.json)
           REACT_QUERY_VERSION=$(jq -r .version packages/react-query/package.json)
           
-          # Create release for query-core
+          # Create zip files of the build directories
+          pushd packages/query-core && zip -r ../../query-core-build.zip build/ && popd
+          pushd packages/react-query && zip -r ../../react-query-build.zip build/ && popd
+          
+          # Create releases with zip files
           gh release create "@ramp/query-core@v${QUERY_CORE_VERSION}" \
             --title "@ramp/query-core@v${QUERY_CORE_VERSION}" \
             --generate-notes \
-            packages/query-core/build/*
+            query-core-build.zip
 
-          # Create release for react-query
           gh release create "@ramp/react-query@v${REACT_QUERY_VERSION}" \
             --title "@ramp/react-query@v${REACT_QUERY_VERSION}" \
             --generate-notes \
-            packages/react-query/build/* 
+            react-query-build.zip 
