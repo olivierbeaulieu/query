@@ -12,46 +12,49 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
   cancel-in-progress: true
-
-env:
-  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
-
 permissions:
   contents: write
   id-token: write
 
 jobs:
   test-and-publish:
-    name: Test & Publish
-    if: github.repository_owner == 'TanStack'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-      - name: Start Nx Agents
-        run: npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
-      - name: Setup Tools
-        uses: tanstack/config/.github/setup@main
-      - name: Run Tests
-        run: pnpm run test:ci --parallel=3
-      - name: Stop Nx Agents
-        if: ${{ always() }}
-        run: npx nx-cloud stop-all-agents
-      - name: Publish
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.14.2
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build packages
+        run: pnpm build:all
+
+      - name: Create Releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global user.name 'Tanner Linsley'
-          git config --global user.email 'tannerlinsley@users.noreply.github.com'
-          npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
-          pnpm run cipublish
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          TAG: ${{ inputs.tag }}
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4.5.0
-        with:
-          directory: packages
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          # Get versions from package.json files
+          QUERY_CORE_VERSION=$(jq -r .version packages/query-core/package.json)
+          REACT_QUERY_VERSION=$(jq -r .version packages/react-query/package.json)
+          
+          # Create release for query-core
+          gh release create "@ramp/query-core@v${QUERY_CORE_VERSION}" \
+            --title "@ramp/query-core@v${QUERY_CORE_VERSION}" \
+            --generate-notes \
+            packages/query-core/build/*
+
+          # Create release for react-query
+          gh release create "@ramp/react-query@v${REACT_QUERY_VERSION}" \
+            --title "@ramp/react-query@v${REACT_QUERY_VERSION}" \
+            --generate-notes \
+            packages/react-query/build/* 
